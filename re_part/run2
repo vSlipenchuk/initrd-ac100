@@ -1,0 +1,8 @@
+# rerun it after reboot of ac100
+
+nvflash --bl bootloader.bin --go
+#nvflash --resume --download 5 p5.img
+nvflash --resume --download 6 p6.img
+
+# just as fake OS
+#nvflash --resume --download 8 p6.img

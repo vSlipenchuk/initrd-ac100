@@ -1,0 +1,6 @@
+#!/bin/bash
+
+
+nvflash --bct ac100.bct --setbct \
+    --configfile linux.cfg --create --bl bootloader.bin --go
+
