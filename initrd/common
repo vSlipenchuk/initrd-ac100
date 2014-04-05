@@ -1,4 +1,4 @@
-BANNER="ac-100 initrd 7.7  (c) vslipenchuk@gmail.com"
+BANNER="ac-100 initrd 7.8  (c) vslipenchuk@gmail.com"
 TRYDEV=${mntdev:-"sda1 mmcblk0p7 mmcblk1p1"}
 
 prnerr() { echo -en "\033[37;1;41m$1\033[0m\n" ; }
