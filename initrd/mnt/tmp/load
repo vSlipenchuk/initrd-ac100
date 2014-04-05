@@ -1,0 +1,42 @@
+#!/bin/sh
+
+DEV=/dev/mmcblk1p1
+
+# check pivot_root and chroot capabilities
+
+mount -t sysfs none /sys
+mount -t proc none /proc
+mount -t tmpfs none /dev
+
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+mdev -s
+
+mkdir /mnt/dev
+
+while true; do
+ echo try mount $DEV
+ mount $DEV /mnt/dev && break
+ sleep 1
+done
+
+echo $DEV mounted
+ls /mnt/dev
+
+echo "type exit to stop debug"
+ash
+echo "do again"
+
+while true; do
+    echo VS sosboot, on exit try boot to /mnt/dev
+    #/bin/ash
+     cd /mnt/dev
+     # now change root here
+     mkdir -p initrd
+     pivot_root . initrd
+     exec  bin/chroot . sbin/init < dev/console
+     echo we must be never here...
+     /bin/ash
+    reboot
+    #setsid /bin/sh -c 'exec /bin/sh < /dev/tty1 > /dev/tty1 2>&1'
+done
+

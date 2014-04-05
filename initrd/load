@@ -1,0 +1,107 @@
+#!/bin/sh
+
+
+mount -t sysfs none /sys
+mount -t proc none /proc
+
+
+
+#echo run common
+
+. /common
+
+#echo run body
+
+umount /dev
+#mount -t tmpfs none /dev
+#echo /sbin/mdev > /proc/sys/kernel/hotplug
+#mdev -s
+
+find_initrd() 
+{
+for a in 0 1 2 3 4 5 6 7 8 9;
+ do
+ if ! mnt_find initrd.boot /mnt/dev; then
+   prn0 '+'
+   sleep 3
+ else
+   return 0
+ fi
+done
+return 1
+}
+
+
+# check mount root device to /mnt/dev (find initrd.boot or manually)
+while !  grep -wq /mnt/sys /proc/mounts ; do
+ fnd=""
+ if ! find_initrd ; then
+   prnerr "initrd.boot not found, need to mount boot system to /mnt/sys"
+ else 
+   prnok "initrd.boot found on $fnd, try execute"
+   #mount -t tmpfs none /mnt/changes
+   #mkdir -p /mnt/changes/boot
+   #cp /mnt/dev/initrd.boot /mnt/changes/boot
+   #chmod +x /mnt/changes/boot/initrd.boot
+   #. /mnt/changes/boot/initrd.boot $fnd
+   cd /mnt/dev
+   . /mnt/dev/initrd.boot /mnt $fnd 
+     while ! grep -wq /mnt/sys /proc/mounts ; do
+     prnerr "initrd.boot does NOT mount /mnt/sys, try correct"
+     ash
+     done
+ break;
+ fi
+ ash
+done
+
+prnok "try load system now"
+
+cd /mnt/sys
+
+mkdir -p initrd
+
+CHROOT=""
+
+for f in bin sbin usr/bin usr/sbin ; do
+ if [ -x $f/chroot ]; then
+   CHROOT=$f/chroot
+   break
+ fi
+done
+
+if [ "$CHROOT" = "" ]; then
+ fatal chroot not found
+fi
+
+for f in bin sbin usr/bin usr/sbin ; do
+ if [ -x $f/init ]; then
+   INIT=$f/init
+   break
+ fi
+done
+
+if [ "$INIT" = "" ]; then
+ fatal "init not found"
+fi
+
+#mount -o bind /proc proc
+#mount -o bind /dev  dev
+#mount -o bind /sys  sys
+
+
+umount /proc
+umount /sys
+umount /dev
+
+
+#CHROOT=/usr/sbin/chroot
+prnok "try load CHROOT=$CHROOT INIT=$INIT"
+
+pivot_root . initrd
+exec  $CHROOT . /$INIT < dev/console > dev/console 2>&1
+echo we must be never here...
+/bin/ash
+
+reboot
+

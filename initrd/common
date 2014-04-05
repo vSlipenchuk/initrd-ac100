@@ -1,0 +1,42 @@
+BANNER="ac-100 initrd 7.7  (c) vslipenchuk@gmail.com"
+TRYDEV=${mntdev:-"sda1 mmcblk0p7 mmcblk1p1"}
+
+prnerr() { echo -en "\033[37;1;41m$1\033[0m\n" ; }
+prnok()  { echo -en "\033[40;1;32m$1\033[0m\n" ; }
+prn0()   { echo -en "\033[40;1;36m$1\033[0m"   ; }
+fatal()  { prnerr "FATAL : $1"; prnok "ash is running then system halted"; ash; halt;}
+
+mnt_find() {
+file=$1
+mnt22=$2
+chked=""
+fnd=""
+prn0 "file $file is searching in $TRYDEV..."
+for a in $TRYDEV ; do
+ mount /dev/$a $mnt22 2> /dev/null
+ #echo -en "."
+ #echo last cmd $? for $a
+ if [ "$?" = "0" ]; then
+ #echo MOUNT_OK $a
+  if [ -e "$mnt22/$file" ] ; then
+   #echo FILE $file exists on $a
+   fnd="$fnd$a;";
+   if [ "$2" != "" ]; then
+   #echo $a;
+   prnok "[$a]"
+   return 0
+   fi
+  else
+    chked="$chked$a;"
+    #echo new_checked $chked
+  fi
+ umount $mnt22 2> /dev/null
+ else
+ #echo mount $a failed
+ zu=1
+ fi
+ #umount $mnt22
+done
+prnerr "[not found $a]"
+return 1
+}
